@@ -40,12 +40,14 @@ converts it to speech, which is then routed directly to your audio.
 You can do this with a quoted sentence like so.
 
 ::
+
    ./watson_tts.py "Mary had a little lamb, her fleece was white as snow."
 
 You can also put any `SPR markup`_ that you desire if you are trying
 to get sounds for words that aren't understood.
 
 ::
+
    ./watson_tts.py '<phoneme alphabet="ibm" ph=".0tx.1me.0Fo">tomato</phoneme>'
 
 Because the files are cached in a local audio/ directory, only the
