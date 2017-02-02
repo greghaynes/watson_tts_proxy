@@ -16,15 +16,23 @@
 
 import argparse
 import BaseHTTPServer
+import hashlib
+from os.path import join, dirname, exists
 
 import requests
-
-import os.path
-import urllib2
 
 
 class WatsonTTSServer(BaseHTTPServer.BaseHTTPRequestHandler):
     """A request handler to create a magic local Watson TTS server"""
+
+    def fake_headers(self):
+        # TODO(sdague): really do the right content type
+
+        return {
+            "content-type": "audio/wav",
+            "content-disposition": 'inline; filename="result.wav"',
+            "transfer-encoding": "chunked",
+        }
 
     def do_POST(self):
         """ Translate a local HTTP request to Watson TTS """
@@ -34,30 +42,50 @@ class WatsonTTSServer(BaseHTTPServer.BaseHTTPRequestHandler):
         content_len = int(self.headers.getheader('content-length', 0))
         post_body = self.rfile.read(content_len)
 
-        # make the real request
-        resp = requests.post(real_url, headers=self.headers, data=post_body)
+        # make a content addressable local storage path based on
+        # string args (which is voice & audio type) and body, which is
+        # the text to be sent. This should be a good unique seed.
+        fname = hashlib.sha256(self.path + post_body).hexdigest() + ".wav"
+        fullfile = join(dirname(__file__), "audio", fname)
+        if not exists(fullfile):
+            # make the real request
+            resp = requests.post(real_url, headers=self.headers,
+                                 data=post_body)
 
-        # TODO(sdague): intermediate debugging, keep a copy around.
-        with open("proxytmp.wav", 'wb') as f:
-            f.write(resp.content)
+            # TODO(sdague): intermediate debugging, keep a copy around.
+            with open(fullfile, 'wb') as f:
+                f.write(resp.content)
+                print("Wrote cached content to %s" % fullfile)
 
-        # Process request back to client
-        self.send_response(resp.status_code)
-        for header in resp.headers:
-            # Requests has now decoded the response so some
-            # characteristics of this may no longer be relevant. Don't
-            # send them.
-            if header not in ("connection", "content-length",
-                              "keep-alive"):
-                self.send_header(header, resp.headers[header])
+            # Process request back to client
+            self.send_response(resp.status_code)
+            for header in resp.headers:
+                # Requests has now decoded the response so some
+                # characteristics of this may no longer be relevant. Don't
+                # send them.
+                if header not in ("connection", "content-length",
+                                  "keep-alive"):
+                    self.send_header(header, resp.headers[header])
 
-        self.end_headers()
-        # The client expects chunked encoding, which is just a way to
-        # stream data as it shows up with per line content length. We
-        # already have *all* the data, so we can send a single line
-        # which has it all with the right length.
-        tosend = '%X\r\n%s\r\n' % (len(resp.content), resp.content)
-        self.wfile.write(tosend)
+            self.end_headers()
+            # The client expects chunked encoding, which is just a way to
+            # stream data as it shows up with per line content length. We
+            # already have *all* the data, so we can send a single line
+            # which has it all with the right length.
+            tosend = '%X\r\n%s\r\n' % (len(resp.content), resp.content)
+            self.wfile.write(tosend)
+
+        else:
+            print("Reading from cached content")
+            self.send_response(200)
+            for k, v in self.fake_headers().items():
+                self.send_header(k, v)
+            self.end_headers()
+            with open(fullfile, 'rb') as f:
+                content = f.read()
+                tosend = '%X\r\n%s\r\n' % (len(content), content)
+                self.wfile.write(tosend)
+
         # Then we need to send the null to signal to the client that
         # we're done and it should close out shop.
         self.wfile.write('0\r\n\r\n')

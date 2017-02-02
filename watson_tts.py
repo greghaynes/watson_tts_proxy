@@ -2,7 +2,6 @@
 
 import argparse
 import ConfigParser as configparser
-import json
 import hashlib
 from os.path import join, dirname, exists
 
