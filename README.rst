@@ -53,4 +53,31 @@ to get sounds for words that aren't understood.
 Because the files are cached in a local audio/ directory, only the
 first use of a phrase will hit the network.
 
+
+watson_tts_proxy.py
+===================
+
+There are times when you want to interact with the Watson TTS service,
+but may have intermittent network. In order to handle this scenario we
+have built a transparent caching proxy for Watson TTS service.
+
+This service is started by running:
+
+::
+
+   ./watson_tts_proxy.py
+
+By default this starts a service listening on
+http://localhost:8888. You can specify a different port with the `-p`
+option.
+
+Once a particular phrase is fetched from Watson it's cached locally so
+that future calls with the same phrase don't require the network.
+
+watson_tts_proxy_client.py
+==========================
+
+The watson_tts_proxy_client.py is just a version of watson_tts.py
+program which works against the proxy server.
+
 .. _SPR markup: https://www.ibm.com/watson/developercloud/doc/text-to-speech/SPRs.shtml
