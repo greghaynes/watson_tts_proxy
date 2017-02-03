@@ -15,14 +15,17 @@
 # limitations under the License.
 
 import argparse
-import BaseHTTPServer
+try:
+    from BaseHTTPServer import HTTPServer, BaseHTTPRequestHandler 
+except ImportError:
+    from http.server import HTTPServer, BaseHTTPRequestHandler
 import hashlib
 from os.path import join, dirname, exists
 
 import requests
 
 
-class WatsonTTSServer(BaseHTTPServer.BaseHTTPRequestHandler):
+class WatsonTTSServer(BaseHTTPRequestHandler):
     """A request handler to create a magic local Watson TTS server"""
 
     def fake_headers(self):
@@ -103,10 +106,10 @@ def parse_opts():
 def main():
     opts = parse_opts()
     server_address = ('', opts.port)
-    httpd = BaseHTTPServer.HTTPServer(server_address, WatsonTTSServer)
+    httpd = HTTPServer(server_address, WatsonTTSServer)
 
-    print "Test Server is running at http://localhost:%s" % opts.port
-    print "Ctrl-C to exit"
+    print("Test Server is running at http://localhost:%s" % opts.port)
+    print("Ctrl-C to exit")
     print
 
     while True:
@@ -116,5 +119,5 @@ if __name__ == '__main__':
     try:
         main()
     except KeyboardInterrupt:
-        print "\n"
-        print "Thanks for testing! Please come again."
+        print("\n")
+        print("Thanks for testing! Please come again.")
