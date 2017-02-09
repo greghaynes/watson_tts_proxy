@@ -64,7 +64,7 @@ def play_file(fname):
     data = wf.readframes(chunk)
 
     # play stream (looping from beginning of file to the end)
-    while data != '':
+    while data != b'':
         # writing to the stream is what *actually* plays the sound.
         stream.write(data)
         data = wf.readframes(chunk)
