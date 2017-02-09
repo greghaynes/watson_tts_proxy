@@ -42,13 +42,14 @@ class WatsonTTSServer(BaseHTTPRequestHandler):
         real_url = ("https://stream.watsonplatform.net/text-to-speech/api" +
                     self.path)
         # pull out the body to send
-        content_len = int(self.headers.getheader('content-length', 0))
+        content_len = int(self.headers.get('content-length', 0))
         post_body = self.rfile.read(content_len)
 
         # make a content addressable local storage path based on
         # string args (which is voice & audio type) and body, which is
         # the text to be sent. This should be a good unique seed.
-        fname = hashlib.sha256(self.path + post_body).hexdigest() + ".wav"
+        hash_seed = self.path.encode('utf-8') + post_body
+        fname = hashlib.sha256(hash_seed).hexdigest() + ".wav"
         fullfile = join(dirname(__file__), "audio", fname)
         if not exists(fullfile):
             # make the real request
@@ -75,8 +76,9 @@ class WatsonTTSServer(BaseHTTPRequestHandler):
             # stream data as it shows up with per line content length. We
             # already have *all* the data, so we can send a single line
             # which has it all with the right length.
-            tosend = '%X\r\n%s\r\n' % (len(resp.content), resp.content)
-            self.wfile.write(tosend)
+            self.wfile.write(('%X\r\n' % len(content)).encode('utf-8'))
+            self.wfile.write(content)
+            self.wfile.write(b'\r\n')
 
         else:
             print("Reading from cached content")
@@ -86,12 +88,13 @@ class WatsonTTSServer(BaseHTTPRequestHandler):
             self.end_headers()
             with open(fullfile, 'rb') as f:
                 content = f.read()
-                tosend = '%X\r\n%s\r\n' % (len(content), content)
-                self.wfile.write(tosend)
+                self.wfile.write(('%X\r\n' % len(content)).encode('utf-8'))
+                self.wfile.write(content)
+                self.wfile.write(b'\r\n')
 
         # Then we need to send the null to signal to the client that
         # we're done and it should close out shop.
-        self.wfile.write('0\r\n\r\n')
+        self.wfile.write(b'0\r\n\r\n')
 
 
 def parse_opts():
