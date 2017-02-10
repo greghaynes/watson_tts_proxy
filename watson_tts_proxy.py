@@ -16,7 +16,7 @@
 
 import argparse
 try:
-    from BaseHTTPServer import HTTPServer, BaseHTTPRequestHandler 
+    from BaseHTTPServer import HTTPServer, BaseHTTPRequestHandler
 except ImportError:
     from http.server import HTTPServer, BaseHTTPRequestHandler
 import hashlib
@@ -76,6 +76,7 @@ class WatsonTTSServer(BaseHTTPRequestHandler):
             # stream data as it shows up with per line content length. We
             # already have *all* the data, so we can send a single line
             # which has it all with the right length.
+            content = resp.content
             self.wfile.write(('%X\r\n' % len(content)).encode('utf-8'))
             self.wfile.write(content)
             self.wfile.write(b'\r\n')
