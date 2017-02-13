@@ -28,12 +28,15 @@ def parse_args():
     parser.add_argument('-p', '--proxy',
                         default='http://localhost:8888',
                         help="Proxy host to use for Watson TTS")
+    parser.add_argument('-n', '--no-sound',
+                        help='Do not play the retrieved audio.',
+                        action='store_true')
     parser.add_argument('text', nargs=1)
     args = parser.parse_args()
     return args
 
 
-def generate_speech(text, proxy):
+def generate_speech(text, proxy, no_sound=False):
     fullfile = join(dirname(__file__), "proxy.wav")
     user, passwd = get_config()
     tts = TextToSpeechV1(
@@ -44,7 +47,8 @@ def generate_speech(text, proxy):
     with open(fullfile, 'wb') as f:
         f.write(tts.synthesize(text, accept='audio/wav',
                                voice="en-US_AllisonVoice"))
-    play_file(fullfile)
+    if not no_sound:
+        play_file(fullfile)
     print(fullfile)
 
 
@@ -76,7 +80,7 @@ def play_file(fname):
 
 def main():
     args = parse_args()
-    generate_speech(args.text[0], args.proxy)
+    generate_speech(args.text[0], args.proxy, args.no_sound)
 
 
 if __name__ == "__main__":

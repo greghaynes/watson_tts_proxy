@@ -24,6 +24,8 @@ from os.path import join, dirname, exists
 
 import requests
 
+import watson_tts_proxy_client
+
 
 class WatsonTTSServer(BaseHTTPRequestHandler):
     """A request handler to create a magic local Watson TTS server"""
@@ -97,6 +99,17 @@ class WatsonTTSServer(BaseHTTPRequestHandler):
         # we're done and it should close out shop.
         self.wfile.write(b'0\r\n\r\n')
 
+        if self.server.play_sound:
+            print("Playing audio.")
+            watson_tts_proxy_client.play_file(fullfile)
+
+
+class WatsonTTSHttpServer(HTTPServer):
+    def __init__(self, server_address, handler_class, play_sound=False):
+        super(WatsonTTSHttpServer, self).__init__(server_address,
+                                                  handler_class)
+        self.play_sound = play_sound
+
 
 def parse_opts():
     parser = argparse.ArgumentParser(description=__doc__)
@@ -104,13 +117,17 @@ def parse_opts():
                         help='port to bind to [default: 8888]',
                         type=int,
                         default=8888)
+    parser.add_argument('-s', '--play-sound',
+                        help='Play the retrieved audio.',
+                        action='store_true')
     return parser.parse_args()
 
 
 def main():
     opts = parse_opts()
     server_address = ('', opts.port)
-    httpd = HTTPServer(server_address, WatsonTTSServer)
+    httpd = WatsonTTSHttpServer(server_address, WatsonTTSServer,
+                                opts.play_sound)
 
     print("Test Server is running at http://localhost:%s" % opts.port)
     print("Ctrl-C to exit")
