@@ -18,6 +18,7 @@ virtualenv. To get this working do the following:
 
    cd watson_tts_proxy
    virtualenv .venv
+   source .venv/activate
    pip install -U .
 
 Credentials
