@@ -20,7 +20,7 @@ try:
 except ImportError:
     from http.server import HTTPServer, BaseHTTPRequestHandler
 import hashlib
-from os.path import join, dirname, exists
+from os.path import join, dirname, exists, abspath
 
 import requests
 
@@ -52,7 +52,8 @@ class WatsonTTSServer(BaseHTTPRequestHandler):
         # the text to be sent. This should be a good unique seed.
         hash_seed = self.path.encode('utf-8') + post_body
         fname = hashlib.sha256(hash_seed).hexdigest() + ".wav"
-        fullfile = join(dirname(__file__), "audio", fname)
+        cache = self.server.cache
+        fullfile = join(cache, fname)
         if not exists(fullfile):
             # make the real request
             resp = requests.post(real_url, headers=self.headers,
@@ -105,10 +106,12 @@ class WatsonTTSServer(BaseHTTPRequestHandler):
 
 
 class WatsonTTSHttpServer(HTTPServer):
-    def __init__(self, server_address, handler_class, play_sound=False):
+    def __init__(self, server_address, handler_class, play_sound=False,
+                 cache_dir=None):
         super(WatsonTTSHttpServer, self).__init__(server_address,
                                                   handler_class)
         self.play_sound = play_sound
+        self.cache = cache_dir
 
 
 def parse_opts():
@@ -120,14 +123,18 @@ def parse_opts():
     parser.add_argument('-s', '--play-sound',
                         help='Play the retrieved audio.',
                         action='store_true')
+    parser.add_argument('-d', '--cache-directory',
+                        help='Directory to cache audio files in.',
+                        default='audio')
     return parser.parse_args()
 
 
 def main():
     opts = parse_opts()
     server_address = ('', opts.port)
+    cache_dir = abspath(opts.cache_dir)
     httpd = WatsonTTSHttpServer(server_address, WatsonTTSServer,
-                                opts.play_sound)
+                                opts.play_sound, cache_dir)
 
     print("Test Server is running at http://localhost:%s" % opts.port)
     print("Ctrl-C to exit")

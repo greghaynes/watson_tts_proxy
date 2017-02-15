@@ -72,6 +72,8 @@ By default this starts a service listening on
 http://localhost:8888. You can specify a different port with the `-p`
 option.
 
+You can specify where the content is cached by with the `-d` flag.
+
 Once a particular phrase is fetched from Watson it's cached locally so
 that future calls with the same phrase don't require the network.
 
