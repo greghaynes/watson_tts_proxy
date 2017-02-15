@@ -16,9 +16,10 @@ virtualenv. To get this working do the following:
 
 ::
 
+   cd watson_tts_proxy
    virtualenv .venv
-   pip install -r requirements.txt
-   ./watson_tts.py
+   source .venv/activate
+   pip install -U .
 
 Credentials
 ===========
@@ -31,8 +32,8 @@ looks like a hash.
 Copy speech.cfg.example to speech.cfg to ensure that's valid.
 
 
-watson_tts.py
-=============
+watson-tts
+==========
 
 The basic command just takes the argument on the command line and
 converts it to speech, which is then routed directly to your audio.
@@ -41,21 +42,21 @@ You can do this with a quoted sentence like so.
 
 ::
 
-   ./watson_tts.py "Mary had a little lamb, her fleece was white as snow."
+   watson-tts "Mary had a little lamb, her fleece was white as snow."
 
 You can also put any `SPR markup`_ that you desire if you are trying
 to get sounds for words that aren't understood.
 
 ::
 
-   ./watson_tts.py '<phoneme alphabet="ibm" ph=".0tx.1me.0Fo">tomato</phoneme>'
+   watson-tts '<phoneme alphabet="ibm" ph=".0tx.1me.0Fo">tomato</phoneme>'
 
 Because the files are cached in a local audio/ directory, only the
 first use of a phrase will hit the network.
 
 
-watson_tts_proxy.py
-===================
+watson-tts-proxy
+================
 
 There are times when you want to interact with the Watson TTS service,
 but may have intermittent network. In order to handle this scenario we
@@ -65,7 +66,7 @@ This service is started by running:
 
 ::
 
-   ./watson_tts_proxy.py
+   watson-tts-proxy
 
 By default this starts a service listening on
 http://localhost:8888. You can specify a different port with the `-p`
@@ -74,8 +75,8 @@ option.
 Once a particular phrase is fetched from Watson it's cached locally so
 that future calls with the same phrase don't require the network.
 
-watson_tts_proxy_client.py
-==========================
+watson-tts-proxy-client
+=======================
 
 The watson_tts_proxy_client.py is just a version of watson_tts.py
 program which works against the proxy server.
