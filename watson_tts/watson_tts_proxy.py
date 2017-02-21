@@ -132,7 +132,7 @@ def parse_opts():
 def main():
     opts = parse_opts()
     server_address = ('', opts.port)
-    cache_dir = abspath(opts.cache_dir)
+    cache_dir = abspath(opts.cache_directory)
     httpd = WatsonTTSHttpServer(server_address, WatsonTTSServer,
                                 opts.play_sound, cache_dir)
 
